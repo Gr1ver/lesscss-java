@@ -7,7 +7,7 @@
     <packaging>jar</packaging>
     <name>Official LESS CSS Compiler for Java</name>
     <description>Official LESS CSS Compiler for Java</description>
-    <url>http://github.com/marceloverdijk/lesscss-java</url>
+    <url>http://github.com/Gr1ver/lesscss-java</url>
     
     <parent>
         <groupId>org.sonatype.oss</groupId>
