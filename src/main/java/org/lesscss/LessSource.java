@@ -164,6 +164,10 @@ public class LessSource {
         resolveImports();
     }
 
+    private static String defaultString(String str1, String defaultStr) {
+        return str1 == null ? defaultStr : str1;
+    }
+
     private String loadResource(Resource resource, Charset charset) throws IOException {
         BOMInputStream inputStream = new BOMInputStream( resource.getInputStream() );
         try {
@@ -255,7 +259,8 @@ public class LessSource {
     private void resolveImports() throws IOException {
         Matcher importMatcher = IMPORT_PATTERN.matcher(normalizedContent);
         while (importMatcher.find()) {
-            String importedResource = FilenameUtils.normalize(evaluateExpressions(importMatcher.group(5)));
+            String importedResource = normalizePath(evaluateExpressions(importMatcher.group(5)));
+
             importedResource = importedResource.matches(".*\\.(le?|c)ss$") ? importedResource : importedResource + ".less";
             String importType = importMatcher.group(3)==null ? importedResource.substring(importedResource.lastIndexOf(".") + 1) : importMatcher.group(3);
             if (importType.equals("less")) {
@@ -273,6 +278,10 @@ public class LessSource {
                 }
             }
         }
+    }
+
+    private String normalizePath(String path) {
+        return path == null ? null : defaultString(FilenameUtils.normalize(path), path);
     }
 
     private Resource getImportedResource(String importedResource) throws IOException {
