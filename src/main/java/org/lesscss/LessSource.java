@@ -14,6 +14,8 @@
  */
 package org.lesscss;
 
+import static java.util.regex.Pattern.MULTILINE;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -23,7 +25,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import static java.util.regex.Pattern.MULTILINE;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.BOMInputStream;
@@ -217,7 +218,9 @@ public class LessSource {
             if( importedResource.startsWith("http:") || importedResource.startsWith("https:") ) {
                 return new HttpResource(importedResource);
             } else {
-                return resource.createRelative(importedResource);
+                File importedFile = new File(importedResource);
+                return importedFile.isAbsolute() ? new FileResource(importedFile) :
+                    resource.createRelative(importedFile.getPath());
             }
         } catch (URISyntaxException e) {
             throw (IOException)new IOException( importedResource ).initCause(e);
@@ -229,13 +232,13 @@ public class LessSource {
         builder.append(normalizedContent.substring(0, importMatcher.start(1)));
 
         String mediaQuery = importMatcher.group(8);
-        if( mediaQuery != null && mediaQuery.length() > 0) {
+        if( (mediaQuery != null) && (mediaQuery.length() > 0)) {
             builder.append("@media");
             builder.append( mediaQuery );
             builder.append("{\n");
         }
         builder.append(importedLessSource.getNormalizedContent());
-        if( mediaQuery != null && mediaQuery.length() > 0 ) {
+        if( (mediaQuery != null) && (mediaQuery.length() > 0) ) {
             builder.append("}\n");
         }
         builder.append(normalizedContent.substring(importMatcher.end(1)));
