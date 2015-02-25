@@ -244,13 +244,13 @@
     
     <issueManagement>
         <system>GitHub</system>
-        <url>http://github.com/marceloverdijk/lesscss-java/issues</url>
+        <url>https://github.com/Gr1ver/lesscss-java/issues</url>
     </issueManagement>
     
     <scm>
-        <connection>scm:git:git@github.com:marceloverdijk/lesscss-java.git</connection>
-        <developerConnection>scm:git:git@github.com:marceloverdijk/lesscss-java.git</developerConnection>
-        <url>http://github.com/marceloverdijk/lesscss-java</url>
+        <connection>scm:git:git@github.com:Gr1ver/lesscss-java.git</connection>
+        <developerConnection>scm:git:git@github.com:Gr1ver/lesscss-java.git</developerConnection>
+        <url>https://github.com/Gr1ver/lesscss-java</url>
     </scm>
     
 </project>
