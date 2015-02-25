@@ -262,7 +262,7 @@ public class LessSource {
                 logger.debug("Importing %s", importedResource);
 
                 if( !imports.containsKey(importedResource) ) {
-                    LessSource importedLessSource = new LessSource(getImportedResource(importedResource));
+                    LessSource importedLessSource = new LessSource(getImportedResource(importedResource), expressionEvaluator);
                     imports.put(importedResource, importedLessSource);
 
                     normalizedContent = includeImportedContent(importedLessSource, importMatcher);
