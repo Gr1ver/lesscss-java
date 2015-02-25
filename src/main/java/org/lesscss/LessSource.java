@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.BOMInputStream;
 import org.lesscss.logging.LessLogger;
@@ -254,7 +255,7 @@ public class LessSource {
     private void resolveImports() throws IOException {
         Matcher importMatcher = IMPORT_PATTERN.matcher(normalizedContent);
         while (importMatcher.find()) {
-            String importedResource = evaluateExpressions(importMatcher.group(5));
+            String importedResource = FilenameUtils.normalize(evaluateExpressions(importMatcher.group(5)));
             importedResource = importedResource.matches(".*\\.(le?|c)ss$") ? importedResource : importedResource + ".less";
             String importType = importMatcher.group(3)==null ? importedResource.substring(importedResource.lastIndexOf(".") + 1) : importMatcher.group(3);
             if (importType.equals("less")) {
