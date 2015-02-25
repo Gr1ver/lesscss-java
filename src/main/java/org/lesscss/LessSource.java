@@ -48,7 +48,36 @@ public class LessSource {
     private Resource resource;
     private String content;
     private String normalizedContent;
+    private ExpressionEvaluator expressionEvaluator;
     private Map<String, LessSource> imports = new LinkedHashMap<String, LessSource>();
+
+    /**
+     * Simple helper method to handle simple files.  This delegates
+     * to @see #LessSource(Resource) .
+     * <p>
+     * Expression evaluator is null.
+     * </p>
+     * 
+     * @param input a File to use as input.
+     *
+     * @throws IOException
+     */
+    public LessSource(File input) throws IOException {
+        this( new FileResource(input) );
+    }
+
+    /**
+     * Simple helper method to handle simple files.  This delegates
+     * to @see #LessSource(Resource) .
+     *
+     * @param input a File to use as input.
+     * @param expressionEvaluator used to evaluate expressions in imports
+     *
+     * @throws IOException
+     */
+    public LessSource(File input, ExpressionEvaluator expressionEvaluator) throws IOException {
+        this(new FileResource(input), expressionEvaluator);
+    }
 
     /**
      * Constructs a new <code>LessSource</code>.
@@ -57,6 +86,9 @@ public class LessSource {
      * </p>
      * <p>
      * The resource is read using the default Charset of the platform
+     * </p>
+     * <p>
+     * Expression evaluator is null.
      * </p>
      *
      * @param resource The <code>File</code> reference to the LESS source to read.
@@ -70,7 +102,28 @@ public class LessSource {
     /**
      * Constructs a new <code>LessSource</code>.
      * <p>
+     * This will read the metadata and content of the LESS source, and will automatically resolve the imports.
+     * </p>
+     * <p>
+     * The resource is read using the default Charset of the platform
+     * </p>
+     *
+     * @param resource The <code>File</code> reference to the LESS source to read.
+     * @param expressionEvaluator used to evaluate expressions in imports
+     * @throws FileNotFoundException If the LESS source (or one of its imports) could not be found.
+     * @throws IOException If the LESS source cannot be read.
+     */
+    public LessSource(Resource resource, ExpressionEvaluator expressionEvaluator) throws IOException {
+        this(resource, Charset.defaultCharset(), expressionEvaluator);
+    }
+
+    /**
+     * Constructs a new <code>LessSource</code>.
+     * <p>
      * This will read the metadata and content of the LESS resource, and will automatically resolve the imports.
+     * </p>
+     * <p>
+     * Expression evaluator is null.
      * </p>
      *
      * @param resource The <code>File</code> reference to the LESS resource to read.
@@ -79,6 +132,22 @@ public class LessSource {
      * @throws IOException If the LESS resource cannot be read.
      */
     public LessSource(Resource resource, Charset charset) throws IOException {
+        this(resource, charset, null);
+    }
+
+    /**
+     * Constructs a new <code>LessSource</code>.
+     * <p>
+     * This will read the metadata and content of the LESS resource, and will automatically resolve the imports.
+     * </p>
+     *
+     * @param resource The <code>File</code> reference to the LESS resource to read.
+     * @param charset charset used to read the less resource.
+     * @param expressionEvaluator used to evaluate expressions in imports
+     * @throws FileNotFoundException If the LESS resource (or one of its imports) could not be found.
+     * @throws IOException If the LESS resource cannot be read.
+     */
+    public LessSource(Resource resource, Charset charset, ExpressionEvaluator expressionEvaluator) throws IOException {
         if (resource == null) {
             throw new IllegalArgumentException("Resource must not be null.");
         }
@@ -86,20 +155,9 @@ public class LessSource {
             throw new IOException("Resource " + resource + " not found.");
         }
         this.resource = resource;
+        this.expressionEvaluator = expressionEvaluator;
         this.content = this.normalizedContent = loadResource(resource, charset);
         resolveImports();
-    }
-
-    /**
-     * Simple helper method to handle simple files.  This delegates
-     * to @see #LessSource(Resource) .
-     *
-     * @param input a File to use as input.
-     *
-     * @throws IOException
-     */
-    public LessSource(File input) throws IOException {
-        this( new FileResource(input) );
     }
 
     private String loadResource(Resource resource, Charset charset) throws IOException {
@@ -200,7 +258,7 @@ public class LessSource {
                 logger.debug("Importing %s", importedResource);
 
                 if( !imports.containsKey(importedResource) ) {
-                    LessSource importedLessSource = new LessSource(getImportedResource(importedResource));
+                    LessSource importedLessSource = new LessSource(getImportedResource(evaluateExpressions(importedResource)));
                     imports.put(importedResource, importedLessSource);
 
                     normalizedContent = includeImportedContent(importedLessSource, importMatcher);
@@ -243,6 +301,15 @@ public class LessSource {
         }
         builder.append(normalizedContent.substring(importMatcher.end(1)));
         return builder.toString();
+    }
+
+    /**
+     * Performs call to evaluator if it is specified
+     * @param str
+     * @return evaluated string if evaluator is specified, original string otherwise
+     */
+    private String evaluateExpressions(String str) {
+        return expressionEvaluator == null ? str : expressionEvaluator.evaluate(str);
     }
 
     public String getName() {
