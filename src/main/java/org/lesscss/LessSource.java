@@ -154,6 +154,9 @@ public class LessSource {
         if (!resource.exists()) {
             throw new IOException("Resource " + resource + " not found.");
         }
+        if(expressionEvaluator == null) {
+            logger.debug("Evaluator is Null");
+        }
         this.resource = resource;
         this.expressionEvaluator = expressionEvaluator;
         this.content = this.normalizedContent = loadResource(resource, charset);
@@ -251,14 +254,14 @@ public class LessSource {
     private void resolveImports() throws IOException {
         Matcher importMatcher = IMPORT_PATTERN.matcher(normalizedContent);
         while (importMatcher.find()) {
-            String importedResource = importMatcher.group(5);
+            String importedResource = evaluateExpressions(importMatcher.group(5));
             importedResource = importedResource.matches(".*\\.(le?|c)ss$") ? importedResource : importedResource + ".less";
             String importType = importMatcher.group(3)==null ? importedResource.substring(importedResource.lastIndexOf(".") + 1) : importMatcher.group(3);
             if (importType.equals("less")) {
                 logger.debug("Importing %s", importedResource);
 
                 if( !imports.containsKey(importedResource) ) {
-                    LessSource importedLessSource = new LessSource(getImportedResource(evaluateExpressions(importedResource)));
+                    LessSource importedLessSource = new LessSource(getImportedResource(importedResource));
                     imports.put(importedResource, importedLessSource);
 
                     normalizedContent = includeImportedContent(importedLessSource, importMatcher);
@@ -309,7 +312,14 @@ public class LessSource {
      * @return evaluated string if evaluator is specified, original string otherwise
      */
     private String evaluateExpressions(String str) {
-        return expressionEvaluator == null ? str : expressionEvaluator.evaluate(str);
+        String result;
+        if(expressionEvaluator == null) {
+            result = str;
+        } else {
+            result = expressionEvaluator.evaluate(str);
+            logger.debug(String.format("Evaluate string: %s result in: %s", str, result));
+        }
+        return result;
     }
 
     public String getName() {
